@@ -1,0 +1,64 @@
+version: "1.0"
+name: office-automation-guardrails
+description: "Office Automation Agent Security Guardrails - Prevent file deletion and sensitive directory access"
+
+rules:
+  # Block file deletion
+  - name: block-file-deletion
+    condition:
+      field: tool_name
+      operator: eq
+      value: delete_file
+    action: block
+    priority: 100
+    message: "File deletion blocked - please confirm manually"
+
+  # Block access to sensitive directories
+  - name: block-sensitive-directories
+    condition:
+      field: params.path
+      operator: matches
+      value: "(salary|confidential|hr|legal|finance).*"
+    action: block
+    priority: 95
+    message: "Sensitive directory access blocked - contact admin"
+
+  # Block system file modification
+  - name: block-system-files
+    condition:
+      field: params.path
+      operator: matches
+      value: "(C:\\\\Windows|/etc|/sys).*"
+    action: block
+    priority: 90
+    message: "System file modification blocked"
+
+  # Block script execution
+  - name: block-script-execution
+    condition:
+      field: tool_name
+      operator: in
+      value: ["execute_bash", "execute_powershell", "execute_python"]
+    action: block
+    priority: 85
+    message: "Script execution blocked - prevents code injection"
+
+  # Audit file operations
+  - name: audit-file-operations
+    condition:
+      field: tool_name
+      operator: in
+      value: ["read_file", "write_file", "move_file", "copy_file"]
+    action: audit
+    priority: 70
+    message: "File operation logged for audit"
+
+  # Block external network access
+  - name: block-network-access
+    condition:
+      field: tool_name
+      operator: in
+      value: ["http_request", "ftp_upload", "ssh_connect"]
+    action: block
+    priority: 80
+    message: "External network access blocked - prevents data exfiltration"

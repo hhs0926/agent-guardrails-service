@@ -1,0 +1,54 @@
+version: "1.0"
+name: customer-service-guardrails
+description: "Customer Service Agent Security Guardrails - Prevent data leakage"
+
+rules:
+  # Block external email (anti-phishing)
+  - name: block-external-email
+    condition:
+      field: tool_name
+      operator: eq
+      value: send_email
+    action: block
+    priority: 100
+    message: "External email blocked to prevent customer data leakage"
+
+  # Block bulk data export
+  - name: block-bulk-export
+    condition:
+      field: tool_name
+      operator: in
+      value: ["export_csv", "export_excel", "download_file"]
+    action: block
+    priority: 90
+    message: "Bulk customer data export blocked"
+
+  # Token usage limit (anti-abuse)
+  - name: token-limit
+    condition:
+      field: token_count
+      operator: gt
+      value: 4000
+    action: block
+    priority: 80
+    message: "Token count exceeds limit (max 4000)"
+
+  # Audit all customer data queries
+  - name: audit-customer-queries
+    condition:
+      field: tool_name
+      operator: eq
+      value: database_query
+    action: audit
+    priority: 70
+    message: "Customer data query logged for audit"
+
+  # Block customer data modification
+  - name: block-customer-modification
+    condition:
+      field: tool_name
+      operator: in
+      value: ["update_customer", "delete_customer", "create_customer"]
+    action: block
+    priority: 95
+    message: "Customer data modification blocked - contact human support"

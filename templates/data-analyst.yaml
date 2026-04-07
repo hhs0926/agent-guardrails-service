@@ -1,0 +1,54 @@
+version: "1.0"
+name: data-analyst-guardrails
+description: "Data Analyst Agent Security Guardrails - Prevent data tampering and exfiltration"
+
+rules:
+  # Block data source modification
+  - name: block-data-modification
+    condition:
+      field: tool_name
+      operator: in
+      value: ["database_insert", "database_update", "database_delete"]
+    action: block
+    priority: 100
+    message: "Data modification blocked - data analysis is read-only"
+
+  # Block access to sensitive tables
+  - name: block-sensitive-tables
+    condition:
+      field: params.table
+      operator: in
+      value: ["users", "customers", "payments", "salaries"]
+    action: block
+    priority: 95
+    message: "Sensitive table access blocked - contact admin for authorization"
+
+  # Block export to external systems
+  - name: block-external-export
+    condition:
+      field: tool_name
+      operator: in
+      value: ["send_email", "upload_cloud", "external_api"]
+    action: block
+    priority: 90
+    message: "Data export to external systems blocked"
+
+  # Audit large queries
+  - name: audit-large-queries
+    condition:
+      field: params.result_count
+      operator: gt
+      value: 1000
+    action: audit
+    priority: 80
+    message: "Large batch query logged for audit"
+
+  # Execution time limit (prevent infinite loops)
+  - name: execution-time-limit
+    condition:
+      field: execution_time
+      operator: gt
+      value: 300
+    action: block
+    priority: 75
+    message: "Execution time exceeds 5 minutes - terminated"
